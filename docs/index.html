@@ -15,6 +15,7 @@
     --text:#14181A;
     --text-muted:#5B6467;
     --border:#D2D8D7;
+    --figure:#7C8583;
     --accent-legs:#C4432B;
     --accent-back:#2C5F8A;
     --accent-chest:#C1932A;
@@ -32,6 +33,7 @@
       --text:#EDEFEE;
       --text-muted:#9AA3A6;
       --border:#333B3F;
+      --figure:#9BA6A3;
       --accent-legs:#E2593C;
       --accent-back:#5B92C4;
       --accent-chest:#E0B24A;
@@ -46,6 +48,7 @@
     --text:#EDEFEE;
     --text-muted:#9AA3A6;
     --border:#333B3F;
+    --figure:#9BA6A3;
     --accent-legs:#E2593C;
     --accent-back:#5B92C4;
     --accent-chest:#E0B24A;
@@ -200,11 +203,11 @@
   .exercise.done{ opacity:0.62; }
   .ex-head{ display:flex; align-items:flex-start; gap:12px; }
   .ex-icon{
-    flex:none; width:44px; height:44px; border-radius:var(--radius-sm);
+    flex:none; width:56px; height:56px; border-radius:var(--radius-sm);
     background:var(--surface-2); color:var(--accent);
     display:flex; align-items:center; justify-content:center;
   }
-  .ex-icon svg{ width:26px; height:26px; }
+  .ex-icon svg{ width:38px; height:38px; }
   .ex-info{ flex:1; min-width:0; }
   .ex-info h3{ font-family:"IBM Plex Sans"; font-size:15.5px; font-weight:600; letter-spacing:0; line-height:1.3; }
   .ex-info .note{ font-size:12.5px; color:var(--text-muted); margin-top:2px; }
@@ -270,97 +273,174 @@
 (function(){
   "use strict";
 
-  /* ---------------- Icon kit: line pictograms, 48x48, style like gym signage ---------------- */
-  const S = 'fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"';
+  /* ---------------- Icon kit: filled illustrated pictograms, 48x48 ----------------
+     Colour roles: FIG = body (muted, consistent across all icons)
+                   ACC = equipment the lifter loads (bar/plates/handles) — day accent colour
+                   STR = structural frame (bench/machine/rail) — neutral, sits behind FIG/ACC */
+  const FIG = 'var(--figure)';
+  const ACC = 'var(--accent)';
+  const STR = 'var(--border)';
+  function ic(inner){ return `<svg viewBox="0 0 48 48" fill="none">${inner}</svg>`; }
+  function j(x,y,r,c){ return `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}"/>`; }
+
   const ICONS = {
-    squat: `<svg viewBox="0 0 48 48" ${S}><circle cx="24" cy="8.5" r="3.2" fill="currentColor" stroke="none"/>
-      <line x1="10" y1="10" x2="10" y2="16"/><line x1="38" y1="10" x2="38" y2="16"/><line x1="10" y1="13" x2="38" y2="13"/>
-      <line x1="24" y1="13" x2="24" y2="15"/>
-      <line x1="16" y1="15" x2="24" y2="24"/><line x1="32" y1="15" x2="24" y2="24"/>
-      <path d="M24 24 L16 33 L14 42"/><path d="M24 24 L32 33 L34 42"/></svg>`,
-    legpress: `<svg viewBox="0 0 48 48" ${S}><line x1="6" y1="40" x2="30" y2="40"/>
-      <line x1="12" y1="40" x2="24" y2="20"/>
-      <rect x="30" y="12" width="4" height="16" rx="1"/><rect x="36" y="12" width="4" height="16" rx="1"/>
-      <circle cx="14" cy="30" r="3" fill="currentColor" stroke="none"/>
-      <line x1="14" y1="30" x2="10" y2="40"/>
-      <path d="M14 30 L26 26"/><path d="M26 26 L30 20"/></svg>`,
-    legext: `<svg viewBox="0 0 48 48" ${S}><rect x="8" y="18" width="10" height="18" rx="1.5"/>
-      <circle cx="19" cy="14" r="3.2" fill="currentColor" stroke="none"/>
-      <line x1="19" y1="17" x2="19" y2="26"/>
-      <path d="M19 26 L34 18"/>
-      <path d="M27 10 L33 15" stroke-dasharray="1 5"/>
-      <path d="M31 9 L35 10 L33 14"/></svg>`,
-    legcurl: `<svg viewBox="0 0 48 48" ${S}><rect x="6" y="28" width="30" height="6" rx="2"/>
-      <circle cx="10" cy="22" r="3.2" fill="currentColor" stroke="none"/>
-      <line x1="12" y1="25" x2="32" y2="28"/>
-      <path d="M32 28 L36 16"/>
-      <path d="M28 10 L33 15" stroke-dasharray="1 5"/><path d="M27 12 L28 9 L31 11"/></svg>`,
-    calf: `<svg viewBox="0 0 48 48" ${S}><circle cx="24" cy="9" r="3.2" fill="currentColor" stroke="none"/>
-      <line x1="24" y1="12" x2="24" y2="27"/>
-      <line x1="24" y1="27" x2="19" y2="40"/><line x1="24" y1="27" x2="29" y2="40"/>
-      <line x1="19" y1="40" x2="23" y2="42"/><line x1="29" y1="40" x2="25" y2="42"/>
-      <path d="M32 8 L32 1" stroke-dasharray="0"/><path d="M29 4 L32 0 L35 4"/></svg>`,
-    rdl: `<svg viewBox="0 0 48 48" ${S}><circle cx="14" cy="10" r="3.2" fill="currentColor" stroke="none"/>
-      <path d="M14 13 L30 20"/>
-      <path d="M30 20 L18 26"/>
-      <line x1="8" y1="30" x2="8" y2="36"/><line x1="38" y1="30" x2="38" y2="36"/><line x1="8" y1="33" x2="38" y2="33"/>
-      <line x1="18" y1="26" x2="18" y2="33"/>
-      <path d="M18 26 L16 40"/><path d="M18 26 L24 40"/></svg>`,
-    rowbent: `<svg viewBox="0 0 48 48" ${S}><circle cx="12" cy="12" r="3.2" fill="currentColor" stroke="none"/>
-      <path d="M12 15 L28 22"/>
-      <path d="M28 22 L20 30"/>
-      <line x1="14" y1="34" x2="14" y2="40"/><line x1="34" y1="34" x2="34" y2="40"/><line x1="14" y1="37" x2="34" y2="37"/>
-      <line x1="24" y1="30" x2="24" y2="37"/>
-      <path d="M20 30 L24 37"/>
-      <line x1="20" y1="30" x2="18" y2="42"/><line x1="20" y1="30" x2="26" y2="42"/></svg>`,
-    latpull: `<svg viewBox="0 0 48 48" ${S}><circle cx="30" cy="6" r="2.6"/>
-      <line x1="30" y1="9" x2="30" y2="22"/>
-      <line x1="20" y1="22" x2="40" y2="22"/>
-      <circle cx="21" cy="16" r="3.2" fill="currentColor" stroke="none"/>
-      <line x1="21" y1="19" x2="21" y2="30"/>
-      <path d="M21 22 L27 24"/><path d="M27 24 L30 22"/>
-      <line x1="21" y1="30" x2="17" y2="42"/><line x1="21" y1="30" x2="25" y2="42"/></svg>`,
-    cablerow: `<svg viewBox="0 0 48 48" ${S}><circle cx="6" cy="26" r="2.6"/>
-      <line x1="9" y1="26" x2="24" y2="26"/>
-      <circle cx="30" cy="17" r="3.2" fill="currentColor" stroke="none"/>
-      <line x1="30" y1="20" x2="30" y2="30"/>
-      <path d="M30 22 L24 26"/>
-      <line x1="30" y1="30" x2="36" y2="35"/><line x1="36" y1="35" x2="42" y2="35"/>
-      <line x1="30" y1="30" x2="24" y2="40"/></svg>`,
-    backext: `<svg viewBox="0 0 48 48" ${S}><path d="M6 34 L28 26"/>
-      <circle cx="14" cy="26" r="3.2" fill="currentColor" stroke="none"/>
-      <path d="M14 29 Q22 40 34 30"/>
-      <path d="M34 30 L40 22"/><path d="M34 30 L38 34"/></svg>`,
-    bench: `<svg viewBox="0 0 48 48" ${S}><rect x="8" y="30" width="30" height="5" rx="1.5"/>
-      <circle cx="14" cy="26" r="3.2" fill="currentColor" stroke="none"/>
-      <line x1="14" y1="29" x2="14" y2="32"/>
-      <line x1="14" y1="26" x2="24" y2="16"/>
-      <line x1="12" y1="10" x2="12" y2="15"/><line x1="36" y1="10" x2="36" y2="15"/><line x1="12" y1="12.5" x2="36" y2="12.5"/>
-      <line x1="24" y1="16" x2="24" y2="12.5"/></svg>`,
-    inclinedb: `<svg viewBox="0 0 48 48" ${S}><path d="M8 38 L26 24"/>
-      <circle cx="18" cy="28" r="3.2" fill="currentColor" stroke="none"/>
-      <line x1="20" y1="26" x2="26" y2="14"/>
-      <rect x="21" y="10" width="4" height="4" rx="1" fill="currentColor" stroke="none"/>
-      <rect x="21" y="17" width="4" height="4" rx="1" fill="currentColor" stroke="none"/>
-      <line x1="23" y1="14" x2="23" y2="17"/></svg>`,
-    fly: `<svg viewBox="0 0 48 48" ${S}><rect x="8" y="30" width="30" height="5" rx="1.5"/>
-      <circle cx="23" cy="26" r="3.2" fill="currentColor" stroke="none"/>
-      <path d="M23 29 Q14 22 8 24"/><path d="M23 29 Q32 22 38 24"/>
-      <circle cx="7" cy="24" r="2.2" fill="currentColor" stroke="none"/>
-      <circle cx="39" cy="24" r="2.2" fill="currentColor" stroke="none"/></svg>`,
-    shoulderpress: `<svg viewBox="0 0 48 48" ${S}><rect x="16" y="32" width="16" height="6" rx="1.5"/>
-      <circle cx="24" cy="24" r="3.4" fill="currentColor" stroke="none"/>
-      <line x1="24" y1="27" x2="24" y2="34"/>
-      <line x1="24" y1="27" x2="14" y2="14"/><line x1="24" y1="27" x2="34" y2="14"/>
-      <rect x="11" y="9" width="5" height="5" rx="1.2" fill="currentColor" stroke="none"/>
-      <rect x="32" y="9" width="5" height="5" rx="1.2" fill="currentColor" stroke="none"/></svg>`,
-    tricepspushdown: `<svg viewBox="0 0 48 48" ${S}><circle cx="24" cy="4.5" r="2.6"/>
-      <line x1="24" y1="7" x2="24" y2="18"/>
-      <line x1="17" y1="18" x2="31" y2="18"/>
-      <circle cx="24" cy="12" r="3.2" fill="currentColor" stroke="none"/>
-      <line x1="20" y1="15" x2="20" y2="26"/><line x1="28" y1="15" x2="28" y2="26"/>
-      <line x1="18" y1="18" x2="20" y2="22"/><line x1="30" y1="18" x2="28" y2="22"/>
-      <line x1="20" y1="26" x2="17" y2="40"/><line x1="28" y1="26" x2="31" y2="40"/></svg>`
+    squat: ic(`
+      ${j(24,9,4.2,FIG)}
+      <line x1="9" y1="9.5" x2="39" y2="9.5" stroke="${ACC}" stroke-width="4" stroke-linecap="round"/>
+      <rect x="7" y="6" width="4.5" height="9" rx="1.5" fill="${ACC}"/><rect x="36.5" y="6" width="4.5" height="9" rx="1.5" fill="${ACC}"/>
+      <line x1="24" y1="13.5" x2="24" y2="25" stroke="${FIG}" stroke-width="7" stroke-linecap="round"/>
+      <line x1="24" y1="15" x2="16" y2="17" stroke="${FIG}" stroke-width="4" stroke-linecap="round"/>
+      <line x1="24" y1="15" x2="32" y2="17" stroke="${FIG}" stroke-width="4" stroke-linecap="round"/>
+      ${j(24,25,2.8,FIG)}
+      <line x1="24" y1="25" x2="16" y2="33" stroke="${FIG}" stroke-width="6" stroke-linecap="round"/>
+      <line x1="24" y1="25" x2="32" y2="33" stroke="${FIG}" stroke-width="6" stroke-linecap="round"/>
+      ${j(16,33,2.6,FIG)}${j(32,33,2.6,FIG)}
+      <line x1="16" y1="33" x2="14" y2="42" stroke="${FIG}" stroke-width="5" stroke-linecap="round"/>
+      <line x1="32" y1="33" x2="34" y2="42" stroke="${FIG}" stroke-width="5" stroke-linecap="round"/>
+    `),
+    legpress: ic(`
+      <line x1="9" y1="41" x2="31" y2="18" stroke="${STR}" stroke-width="3.5" stroke-linecap="round"/>
+      <rect x="6" y="37" width="15" height="7" rx="2.5" fill="none" stroke="${STR}" stroke-width="3"/>
+      <rect x="28" y="9" width="5" height="15" rx="1.5" fill="${ACC}"/><rect x="35" y="9" width="5" height="15" rx="1.5" fill="${ACC}"/>
+      ${j(14,29,4.2,FIG)}
+      <line x1="14" y1="33" x2="16" y2="40" stroke="${FIG}" stroke-width="6.5" stroke-linecap="round"/>
+      ${j(16,40,2.6,FIG)}
+      <line x1="16" y1="40" x2="26" y2="32" stroke="${FIG}" stroke-width="6" stroke-linecap="round"/>
+      ${j(26,32,2.4,FIG)}
+      <line x1="26" y1="32" x2="31" y2="20" stroke="${FIG}" stroke-width="5" stroke-linecap="round"/>
+    `),
+    legext: ic(`
+      <rect x="6" y="30" width="15" height="7" rx="2.5" fill="none" stroke="${STR}" stroke-width="3"/>
+      ${j(13,17,4.2,FIG)}
+      <line x1="13" y1="21" x2="13" y2="30" stroke="${FIG}" stroke-width="6.5" stroke-linecap="round"/>
+      ${j(13,30,2.6,FIG)}
+      <line x1="13" y1="30" x2="25" y2="30" stroke="${FIG}" stroke-width="6" stroke-linecap="round"/>
+      ${j(25,30,2.4,FIG)}
+      <line x1="25" y1="30" x2="35" y2="19" stroke="${FIG}" stroke-width="5" stroke-linecap="round"/>
+      <path d="M30 12 Q35 11 36 16" stroke="${ACC}" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+      <path d="M32.5 9.5 L36.5 11 L34 14.5 Z" fill="${ACC}"/>
+    `),
+    legcurl: ic(`
+      <rect x="4" y="29" width="30" height="7" rx="2.5" fill="none" stroke="${STR}" stroke-width="3"/>
+      ${j(10,23,4.2,FIG)}
+      <line x1="10" y1="27" x2="24" y2="32.5" stroke="${FIG}" stroke-width="6.5" stroke-linecap="round"/>
+      ${j(24,32.5,2.6,FIG)}
+      <line x1="24" y1="32.5" x2="35" y2="32.5" stroke="${FIG}" stroke-width="6" stroke-linecap="round"/>
+      ${j(35,32.5,2.4,FIG)}
+      <line x1="35" y1="32.5" x2="39" y2="20" stroke="${FIG}" stroke-width="5" stroke-linecap="round"/>
+      <path d="M32 13 Q37 12 38.5 17" stroke="${ACC}" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+      <path d="M34.5 10.5 L38.5 12 L36 15.5 Z" fill="${ACC}"/>
+    `),
+    calf: ic(`
+      ${j(24,9,4.2,FIG)}
+      <line x1="24" y1="13" x2="24" y2="21" stroke="${FIG}" stroke-width="6.5" stroke-linecap="round"/>
+      <line x1="24" y1="15" x2="17" y2="21" stroke="${FIG}" stroke-width="3.5" stroke-linecap="round"/>
+      <line x1="24" y1="15" x2="31" y2="21" stroke="${FIG}" stroke-width="3.5" stroke-linecap="round"/>
+      ${j(24,21,2.6,FIG)}
+      <line x1="24" y1="21" x2="21" y2="35" stroke="${FIG}" stroke-width="6" stroke-linecap="round"/>
+      <line x1="21" y1="35" x2="20" y2="41" stroke="${FIG}" stroke-width="5" stroke-linecap="round"/>
+      <line x1="20" y1="41" x2="27" y2="43" stroke="${FIG}" stroke-width="4.5" stroke-linecap="round"/>
+      <line x1="33" y1="9" x2="33" y2="1.5" stroke="${ACC}" stroke-width="3" stroke-linecap="round"/>
+      <path d="M29.5 5 L33 0.5 L36.5 5 Z" fill="${ACC}"/>
+    `),
+    rdl: ic(`
+      ${j(13,10,4.2,FIG)}
+      <line x1="13" y1="14" x2="28" y2="20" stroke="${FIG}" stroke-width="7" stroke-linecap="round"/>
+      ${j(28,20,2.8,FIG)}
+      <line x1="15" y1="15" x2="9" y2="28" stroke="${FIG}" stroke-width="4" stroke-linecap="round"/>
+      <line x1="28" y1="20" x2="26" y2="33" stroke="${FIG}" stroke-width="6" stroke-linecap="round"/>
+      <line x1="26" y1="33" x2="28" y2="42" stroke="${FIG}" stroke-width="5" stroke-linecap="round"/>
+      <line x1="7" y1="28" x2="18" y2="28" stroke="${ACC}" stroke-width="4" stroke-linecap="round"/>
+      <rect x="4.5" y="24" width="4.5" height="9" rx="1.5" fill="${ACC}"/><rect x="15.5" y="24" width="4.5" height="9" rx="1.5" fill="${ACC}"/>
+    `),
+    rowbent: ic(`
+      ${j(12,12,4.2,FIG)}
+      <line x1="12" y1="16" x2="27" y2="22" stroke="${FIG}" stroke-width="7" stroke-linecap="round"/>
+      ${j(27,22,2.8,FIG)}
+      <line x1="29" y1="17" x2="33" y2="27" stroke="${FIG}" stroke-width="4" stroke-linecap="round"/>
+      <line x1="27" y1="22" x2="22" y2="34" stroke="${FIG}" stroke-width="6" stroke-linecap="round"/>
+      <line x1="22" y1="34" x2="24" y2="43" stroke="${FIG}" stroke-width="5" stroke-linecap="round"/>
+      <line x1="18" y1="30" x2="30" y2="30" stroke="${ACC}" stroke-width="4" stroke-linecap="round"/>
+      <rect x="15.5" y="26" width="4.5" height="9" rx="1.5" fill="${ACC}"/><rect x="27.5" y="26" width="4.5" height="9" rx="1.5" fill="${ACC}"/>
+    `),
+    latpull: ic(`
+      <circle cx="24" cy="5" r="2.4" fill="none" stroke="${STR}" stroke-width="2.5"/>
+      <line x1="24" y1="7.5" x2="24" y2="19" stroke="${STR}" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="15" y1="19" x2="33" y2="19" stroke="${ACC}" stroke-width="4" stroke-linecap="round"/>
+      ${j(20,14,4.2,FIG)}
+      <line x1="20" y1="18" x2="20" y2="29" stroke="${FIG}" stroke-width="6.5" stroke-linecap="round"/>
+      <line x1="20" y1="19" x2="26" y2="21" stroke="${FIG}" stroke-width="4" stroke-linecap="round"/>
+      ${j(20,29,2.6,FIG)}
+      <line x1="20" y1="29" x2="16" y2="42" stroke="${FIG}" stroke-width="5.5" stroke-linecap="round"/>
+      <line x1="20" y1="29" x2="25" y2="42" stroke="${FIG}" stroke-width="5.5" stroke-linecap="round"/>
+    `),
+    cablerow: ic(`
+      <circle cx="6" cy="24" r="2.4" fill="none" stroke="${STR}" stroke-width="2.5"/>
+      <line x1="8.5" y1="24" x2="24" y2="24" stroke="${ACC}" stroke-width="4" stroke-linecap="round"/>
+      ${j(29,16,4.2,FIG)}
+      <line x1="29" y1="20" x2="29" y2="30" stroke="${FIG}" stroke-width="6.5" stroke-linecap="round"/>
+      <line x1="29" y1="21" x2="24" y2="24" stroke="${FIG}" stroke-width="4" stroke-linecap="round"/>
+      ${j(29,30,2.6,FIG)}
+      <line x1="29" y1="30" x2="37" y2="34" stroke="${FIG}" stroke-width="5.5" stroke-linecap="round"/>
+      <line x1="29" y1="30" x2="23" y2="41" stroke="${FIG}" stroke-width="5.5" stroke-linecap="round"/>
+      <rect x="37" y="31" width="7" height="5.5" rx="1.5" fill="none" stroke="${STR}" stroke-width="2.5"/>
+    `),
+    backext: ic(`
+      <line x1="5" y1="35" x2="27" y2="26" stroke="${STR}" stroke-width="3.5" stroke-linecap="round"/>
+      ${j(13,27,4.2,FIG)}
+      <path d="M13 31 Q20 42 33 32" stroke="${FIG}" stroke-width="6.5" stroke-linecap="round" fill="none"/>
+      <line x1="33" y1="32" x2="39" y2="24" stroke="${FIG}" stroke-width="4.5" stroke-linecap="round"/>
+      <line x1="33" y1="32" x2="37" y2="37" stroke="${FIG}" stroke-width="4.5" stroke-linecap="round"/>
+      <rect x="6" y="33" width="9" height="5" rx="2" fill="none" stroke="${STR}" stroke-width="3"/>
+    `),
+    bench: ic(`
+      <rect x="6" y="32" width="32" height="6" rx="2" fill="none" stroke="${STR}" stroke-width="3"/>
+      <line x1="10" y1="10.5" x2="34" y2="10.5" stroke="${ACC}" stroke-width="4" stroke-linecap="round"/>
+      <rect x="7.5" y="7" width="4.5" height="7" rx="1.5" fill="${ACC}"/><rect x="32" y="7" width="4.5" height="7" rx="1.5" fill="${ACC}"/>
+      ${j(12,28,4.2,FIG)}
+      <line x1="16" y1="30.5" x2="27" y2="31" stroke="${FIG}" stroke-width="7" stroke-linecap="round"/>
+      ${j(27,31,2.6,FIG)}
+      <line x1="27" y1="31" x2="31" y2="41" stroke="${FIG}" stroke-width="5.5" stroke-linecap="round"/>
+      ${j(19,29,2.4,FIG)}
+      <line x1="19" y1="29" x2="22" y2="13" stroke="${FIG}" stroke-width="5" stroke-linecap="round"/>
+    `),
+    inclinedb: ic(`
+      <line x1="8" y1="39" x2="27" y2="23" stroke="${STR}" stroke-width="3.5" stroke-linecap="round"/>
+      ${j(18,29,4.2,FIG)}
+      <line x1="18" y1="33" x2="16" y2="35" stroke="${FIG}" stroke-width="6" stroke-linecap="round"/>
+      <line x1="20" y1="27" x2="25" y2="14" stroke="${FIG}" stroke-width="5" stroke-linecap="round"/>
+      <rect x="21.5" y="9" width="7" height="5" rx="1.8" fill="${ACC}"/>
+      <line x1="25" y1="11.5" x2="21.5" y2="11.5" stroke="${ACC}" stroke-width="2.5"/>
+    `),
+    fly: ic(`
+      <rect x="7" y="29" width="30" height="6" rx="2" fill="none" stroke="${STR}" stroke-width="3"/>
+      ${j(22,25,4.2,FIG)}
+      <line x1="22" y1="29" x2="22" y2="31" stroke="${FIG}" stroke-width="6.5" stroke-linecap="round"/>
+      <path d="M22 27 Q13 20 7 22" stroke="${FIG}" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+      <path d="M22 27 Q31 20 37 22" stroke="${FIG}" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+      <rect x="3.5" y="19.5" width="7" height="5" rx="1.8" fill="${ACC}"/>
+      <rect x="33.5" y="19.5" width="7" height="5" rx="1.8" fill="${ACC}"/>
+    `),
+    shoulderpress: ic(`
+      <rect x="15" y="32" width="18" height="7" rx="2.5" fill="none" stroke="${STR}" stroke-width="3"/>
+      ${j(24,22,4.4,FIG)}
+      <line x1="24" y1="26" x2="24" y2="34" stroke="${FIG}" stroke-width="6.5" stroke-linecap="round"/>
+      <line x1="24" y1="26" x2="15" y2="15" stroke="${FIG}" stroke-width="4.5" stroke-linecap="round"/>
+      <line x1="24" y1="26" x2="33" y2="15" stroke="${FIG}" stroke-width="4.5" stroke-linecap="round"/>
+      <rect x="10.5" y="9" width="7" height="6" rx="1.8" fill="${ACC}"/>
+      <rect x="30.5" y="9" width="7" height="6" rx="1.8" fill="${ACC}"/>
+    `),
+    tricepspushdown: ic(`
+      <circle cx="24" cy="4" r="2.4" fill="none" stroke="${STR}" stroke-width="2.5"/>
+      <line x1="24" y1="6.5" x2="24" y2="17" stroke="${STR}" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="18" y1="17" x2="30" y2="17" stroke="${ACC}" stroke-width="4" stroke-linecap="round"/>
+      ${j(24,11,4.2,FIG)}
+      <line x1="20" y1="15" x2="19" y2="26" stroke="${FIG}" stroke-width="5.5" stroke-linecap="round"/>
+      <line x1="28" y1="15" x2="29" y2="26" stroke="${FIG}" stroke-width="5.5" stroke-linecap="round"/>
+      ${j(19,26,2.4,FIG)}${j(29,26,2.4,FIG)}
+      <line x1="19" y1="26" x2="17" y2="41" stroke="${FIG}" stroke-width="5" stroke-linecap="round"/>
+      <line x1="29" y1="26" x2="31" y2="41" stroke="${FIG}" stroke-width="5" stroke-linecap="round"/>
+    `)
   };
 
   /* ---------------- Program data ---------------- */
